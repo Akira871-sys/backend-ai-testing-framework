@@ -1,0 +1,35 @@
+name: AI System QA Automation CI
+
+# 觸發條件：只要有人 push 程式碼或送 PR 到 main 分支，就啟動這條流水線
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest # 在 GitHub 的 Linux 雲端環境執行
+
+    steps:
+    - name: 1. 複製 GitHub 專案程式碼到雲端
+      uses: actions/checkout@v4
+
+    - name: 2. 設定 Python 環境
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11' # 使用目前企業最常用的穩定 Python 版本
+
+    - name: 3. 安裝所有專案相依套件
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: 4. 啟動背景 Mock Server 後端
+      run: |
+        python mock_server.py &
+        sleep 3 # 讓伺服器飛一會兒，等待 3 秒確保完全啟動
+
+    - name: 5. 執行全套 Pytest 自動化測試 (API 驗證 + Model QA)
+      run: |
+        pytest -v -s
