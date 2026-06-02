@@ -1,0 +1,32 @@
+[
+    {
+      "case_id": "normal_01_low_risk",
+      "description": "正常小額國內交易，預期為低風險",
+      "input": {
+        "user_id": "user_12345",
+        "amount": 150.50,
+        "location": "TW",
+        "device_age_days": 365
+      },
+      "expected": {
+        "status": "success",
+        "is_fraud": false,
+        "confidence_score": 0.02
+      }
+    },
+    {
+      "case_id": "normal_02_high_risk",
+      "description": "新裝置大額國外交易，預期為高風險",
+      "input": {
+        "user_id": "user_67890",
+        "amount": 99999.00,
+        "location": "US",
+        "device_age_days": 1
+      },
+      "expected": {
+        "status": "success",
+        "is_fraud": true,
+        "confidence_score": 0.95
+      }
+    }
+  ]

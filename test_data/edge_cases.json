@@ -1,0 +1,58 @@
+[
+    {
+      "case_id": "edge_01_null_value",
+      "description": "缺失必填欄位或填入空值 (Null Value)",
+      "input": {
+        "user_id": null,
+        "amount": 100.0,
+        "location": "TW",
+        "device_age_days": 30
+      },
+      "expected": {
+        "status_code": 400,
+        "error_message": "user_id cannot be null"
+      }
+    },
+    {
+      "case_id": "edge_02_negative_amount",
+      "description": "極端異常值：交易金額為負數",
+      "input": {
+        "user_id": "user_123",
+        "amount": -500.0,
+        "location": "TW",
+        "device_age_days": 30
+      },
+      "expected": {
+        "status_code": 400,
+        "error_message": "amount must be greater than 0"
+      }
+    },
+    {
+      "case_id": "edge_03_overflow_amount",
+      "description": "極端異常值：金額超級大（可能導致溢位）",
+      "input": {
+        "user_id": "user_123",
+        "amount": 99999999999999999999.9,
+        "location": "TW",
+        "device_age_days": 30
+      },
+      "expected": {
+        "status_code": 400,
+        "error_message": "amount exceeds maximum limit"
+      }
+    },
+    {
+      "case_id": "edge_04_sql_injection",
+      "description": "惡意輸入：超長字串與 SQL 注入攻擊",
+      "input": {
+        "user_id": "user_123'; DROP TABLE users; --",
+        "amount": 100.0,
+        "location": "A" ,
+        "device_age_days": 30
+      },
+      "expected": {
+        "status_code": 400,
+        "error_message": "Invalid characters in user_id"
+      }
+    }
+  ]
