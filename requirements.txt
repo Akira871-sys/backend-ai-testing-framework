@@ -4,3 +4,4 @@ locust==2.24.1
 pandas==2.2.1
 scikit-learn==1.4.1.post1
 numpy==1.26.4
+allure-pytest==2.13.5

@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+# 賦予 GitHub Actions 寫入權限，用來發布報告網頁
+permissions:
+  contents: write
+
 jobs:
   run-tests:
     runs-on: ubuntu-latest
@@ -14,33 +18,48 @@ jobs:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
     steps:
-    - name: 1. 複製 GitHub 專案程式碼到雲端
+    - name: 1. 複製 GitHub 專案程式碼
       uses: actions/checkout@v4
 
-    - name: 2. 設定 Python 環境 (用於執行 pytest)
+    - name: 2. 設定 Python 環境
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
-    - name: 3. 在雲端主機安裝相依套件
+    - name: 3. 安裝相依套件
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # 🔥 【精華補強】步驟 4：將本地的 Mock Server 打包並用 Docker 啟動
-    - name: 4. 使用 Docker 構建並啟動 Mock Server 容器
+    - name: 4. 啟動 Docker 容器化 Mock Server
       run: |
         docker build -t my-ai-mock-server .
         docker run -d -p 8000:8000 --name mock-container my-ai-mock-server
-        sleep 5 # 讓 Docker 容器有足夠時間在背景初始化
+        sleep 5 
 
-    - name: 5. 執行全套 Pytest 自動化測試 (對抗 Docker 容器)
+    # 🔥 修改點：跑 pytest 時，指定將 Allure 的原始資料吐到 allure-results 資料夾
+    - name: 5. 執行全套 Pytest 自動化測試 (輸出 Allure 資料)
       run: |
-        pytest -v -s
+        pytest -v -s --alluredir=allure-results
       continue-on-error: true
 
-    # 🧹 良好的習慣：測試完畢後將 Docker 容器關閉並清除
     - name: 6. 清理 Docker 容器
       run: |
         docker stop mock-container
         docker rm mock-container
+
+    # 🔥 【精華補強】步驟 7：自動將測試結果轉為 HTML 網頁並部署到 GitHub Pages
+    - name: 7. 產生 Allure 測試報告並部署
+      uses: simple-elf/allure-report-action@master
+      if: always() # 確保不論測試成功或失敗，都要產出報告
+      with:
+        allure_results: allure-results
+        allure_history: allure-history
+        keep_reports: 20 # 保留最近 20 次的測試歷史紀錄
+
+    - name: 8. 發布報告到 GitHub Pages 分支
+      uses: peaceiris/actions-gh-pages@v4
+      if: always()
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: allure-history
