@@ -10,7 +10,6 @@ jobs:
   run-tests:
     runs-on: ubuntu-latest
     
-    # 解決 2026 Node.js 警告：直接在環境變數中提前加入 GitHub 要求的強制設定
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
@@ -18,25 +17,30 @@ jobs:
     - name: 1. 複製 GitHub 專案程式碼到雲端
       uses: actions/checkout@v4
 
-    - name: 2. 設定 Python 環境
+    - name: 2. 設定 Python 環境 (用於執行 pytest)
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
-    - name: 3. 安裝所有專案相依套件
+    - name: 3. 在雲端主機安裝相依套件
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: 4. 啟動背景 Mock Server 後端
+    # 🔥 【精華補強】步驟 4：將本地的 Mock Server 打包並用 Docker 啟動
+    - name: 4. 使用 Docker 構建並啟動 Mock Server 容器
       run: |
-        python mock_server.py &
-        sleep 3 
+        docker build -t my-ai-mock-server .
+        docker run -d -p 8000:8000 --name mock-container my-ai-mock-server
+        sleep 5 # 讓 Docker 容器有足夠時間在背景初始化
 
-    # 關鍵修改：因為我們的 Model QA 本來就是設計來「抓錯誤」的，
-    # 加上 continue-on-error: true 可以讓 GitHub 知道「就算 pytest 抓到髒資料報錯，也是預期中的安全行為，請讓流水線繼續並亮綠燈」。
-    # 如果你想看全綠燈，就加上這行；如果你希望只要模型不及格就跳紅燈警告團隊，就維持原樣。
-    - name: 5. 執行全套 Pytest 自動化測試 (API 驗證 + Model QA)
+    - name: 5. 執行全套 Pytest 自動化測試 (對抗 Docker 容器)
       run: |
         pytest -v -s
       continue-on-error: true
+
+    # 🧹 良好的習慣：測試完畢後將 Docker 容器關閉並清除
+    - name: 6. 清理 Docker 容器
+      run: |
+        docker stop mock-container
+        docker rm mock-container
