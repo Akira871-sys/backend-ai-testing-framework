@@ -1,5 +1,7 @@
 # backend-ai-testing-framework
 # AI 系統自動化測試與模型品質保證專案 (AI System Automation & Model QA)
+# 企業及自動化儀表板
+https://akira871-sys.github.io/backend-ai-testing-framework/
 
 本專案針對結合 AI 模型的後端服務，打造了一套完整的自動化測試與品質保證（QA）解決方案。涵蓋範圍從**後端 API 驗證、高併發壓力測試、資料品質檢驗（Data QA）**，到**模型表現門檻測試（Model QA）**，並整合 **GitHub Actions CI 流程**，實現每次程式碼變更時的自動化迴歸測試。
 
